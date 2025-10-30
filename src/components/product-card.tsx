@@ -1,6 +1,16 @@
-import type { SheetRow } from "../utils";
+import { getPriceDiff, PRICE_API_URL, type SheetRow } from "../utils";
 
-export function ProductCard({ product }: { product: SheetRow }) {
+export function ProductCard({
+  product,
+  sheetData,
+  setSheetData,
+  setPriceLoading,
+}: {
+  product: SheetRow;
+  sheetData: SheetRow[];
+  setSheetData: (data: SheetRow[]) => void;
+  setPriceLoading: (loading: boolean) => void;
+}) {
   const fewStocks =
     Number(product.daysOfCover) >= 8 && Number(product.daysOfCover) <= 15;
 
@@ -10,6 +20,50 @@ export function ProductCard({ product }: { product: SheetRow }) {
       : fewStocks
       ? "Only Few Left"
       : "";
+
+  const handleOnApplyAiPricing = () => {
+    setPriceLoading(true);
+    fetch(PRICE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ID: product.id,
+        URL: product.url,
+        IMAGE_URL: product.imageUrl,
+        PRICE: product.price,
+        STOCK: product.stock,
+        MINPRICE: product.minPrice,
+        MAXPRICE: product.maxPrice,
+        CATEGORY: product.category,
+        COLOR: product.color,
+        MATERIAL: product.material,
+        AVG_DAILY_SALES: product.avgDailySales,
+        RECOMMENDED_PRICE: product.recommendedPrice,
+        DAYS_OF_COVER: product.daysOfCover,
+      }),
+    })
+      .then(async (res) => {
+        const aiRecommendedPrice = await res.json();
+        const newData = JSON.parse(JSON.stringify(sheetData)) as SheetRow[];
+
+        const productIndex = newData.findIndex(
+          (item) => item.id === product.id
+        );
+
+        if (productIndex !== -1) {
+          newData[productIndex].aiRecommendedPrice = aiRecommendedPrice;
+          setSheetData(newData);
+        }
+      })
+      .catch((err) => {
+        console.error("Error applying AI pricing:", err);
+      })
+      .finally(() => {
+        setPriceLoading(false);
+      });
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col shadow-sm hover:shadow-md transition-all hover:-translate-y-[2px]">
@@ -50,15 +104,38 @@ export function ProductCard({ product }: { product: SheetRow }) {
       </div>
 
       <div className="text-[14.5px] mb-4 space-y-2">
-        <div className="flex justify-between text-gray-600">
-          <span className="font-medium">Current Price</span>
-          <span className="font-semibold text-gray-900">₹{product.price}</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-gray-600">
+            <span className="font-medium">Current Price</span>
+            <span className="font-semibold text-gray-900">
+              ₹{product.price}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-gray-600">
+            <span className="font-medium">AI Recommended Price</span>
+            {product.aiRecommendedPrice && (
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const { text, colorClass } = getPriceDiff(
+                    Number(product.price),
+                    Number(product.aiRecommendedPrice)
+                  );
+                  return (
+                    <span className={`${colorClass} text-sm font-semibold`}>
+                      {text}
+                    </span>
+                  );
+                })()}
+                <span className="font-semibold text-gray-900">
+                  ₹{product.aiRecommendedPrice}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex justify-between text-gray-600">
-          <span className="font-medium">AI Recommended Price</span>
-          <span className="font-semibold text-gray-900">₹</span>
-        </div>
-        <div className="flex justify-between text-gray-600 mt-4">
+
+        <div className="flex justify-between text-gray-600 mt-8">
           <span className="font-medium">Range</span>
           <span className="font-semibold text-gray-900">
             ₹{product.minPrice} - ₹{product.maxPrice}
@@ -72,7 +149,13 @@ export function ProductCard({ product }: { product: SheetRow }) {
         </div>
       </div>
 
-      <button className="mt-auto w-full bg-gray-900 text-white py-3 rounded-lg font-semibold text-[14px] tracking-tight hover:bg-black transition-all active:scale-[0.98] cursor-pointer">
+      <button
+        className="mt-auto w-full py-3 rounded-lg font-semibold text-[14px] tracking-tight transition-all active:scale-[0.98] 
+    bg-gray-900 text-white hover:bg-black 
+    disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+        onClick={handleOnApplyAiPricing}
+        disabled={!!product.aiRecommendedPrice}
+      >
         Apply AI Pricing
       </button>
     </div>

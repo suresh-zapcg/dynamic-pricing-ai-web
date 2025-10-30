@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { ProductCard } from "./components/product-card";
 import { LoadingOverlay } from "./components/loader";
+import { PriceLoader } from "./components/price-loader";
 import { DATA_SHEET_URL, keyMapper, type SheetRow } from "./utils";
 
 const transformSheetData = (values: string[][]): SheetRow[] => {
@@ -25,6 +26,7 @@ export default function App() {
   const location = useLocation();
 
   const [loading, setLoading] = useState(false);
+  const [priceLoading, setPriceLoading] = useState(false);
   const [sheetData, setSheetData] = useState<SheetRow[]>([]);
 
   const activeSection = useRef<string>("");
@@ -47,7 +49,7 @@ export default function App() {
         setLoading(false);
       }
     };
-    
+
     fetchDataFromSheet();
   }, []);
 
@@ -101,6 +103,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-900 relative">
       {loading && <LoadingOverlay text="Loading" />}
+      {priceLoading && <PriceLoader />}
+
       <header className="backdrop-blur-md bg-white/70 border-b border-gray-200 h-16 flex items-center justify-between px-6 sticky top-0 z-50">
         <h1 className="text-[20px] font-semibold tracking-tight">
           Dynamic Pricing AI
@@ -164,7 +168,13 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {clearanceSaleProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  sheetData={sheetData}
+                  setSheetData={setSheetData}
+                  setPriceLoading={setPriceLoading}
+                />
               ))}
             </div>
           </section>
@@ -180,7 +190,13 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {productsToDisplay.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  sheetData={sheetData}
+                  setSheetData={setSheetData}
+                  setPriceLoading={setPriceLoading}
+                />
               ))}
             </div>
           </section>
