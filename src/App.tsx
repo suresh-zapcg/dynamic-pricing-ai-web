@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ProductCard } from "./components/product-card";
 import { LoadingOverlay } from "./components/loader";
 import { PriceLoader } from "./components/price-loader";
@@ -24,6 +24,7 @@ const transformSheetData = (values: string[][]): SheetRow[] => {
 
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [priceLoading, setPriceLoading] = useState(false);
@@ -33,6 +34,12 @@ export default function App() {
   const overviewRef = useRef<HTMLDivElement | null>(null);
   const clearanceRef = useRef<HTMLDivElement | null>(null);
   const productsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (location.pathname !== "/") {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     const fetchDataFromSheet = async () => {
