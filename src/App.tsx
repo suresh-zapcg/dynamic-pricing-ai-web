@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { ProductCard } from "./components/product-card";
 import { LoadingOverlay } from "./components/loader";
 import { PriceLoader } from "./components/price-loader";
@@ -23,28 +22,18 @@ const transformSheetData = (values: string[][]): SheetRow[] => {
 };
 
 export default function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
   const [priceLoading, setPriceLoading] = useState(false);
   const [sheetData, setSheetData] = useState<SheetRow[]>([]);
 
-  const activeSection = useRef<string>("");
   const overviewRef = useRef<HTMLDivElement | null>(null);
   const clearanceRef = useRef<HTMLDivElement | null>(null);
   const productsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (location.pathname !== "/") {
-      navigate("/", { replace: true });
-    }
-  }, [location.pathname, navigate]);
-
-  useEffect(() => {
     const fetchDataFromSheet = async () => {
       setLoading(true);
-
+      
       try {
         const res = await fetch(DATA_SHEET_URL);
         const json = await res.json();
@@ -56,7 +45,6 @@ export default function App() {
         setLoading(false);
       }
     };
-
     fetchDataFromSheet();
   }, []);
 
@@ -69,43 +57,6 @@ export default function App() {
     () => sheetData.filter((data) => Number(data.daysOfCover) > 7),
     [sheetData]
   );
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = [
-        { id: "/", ref: overviewRef },
-        { id: "/clearance", ref: clearanceRef },
-        { id: "/products", ref: productsRef },
-      ];
-      const offset = window.innerHeight * 0.4;
-      const current = sections.find((section) => {
-        const el = section.ref.current;
-        if (!el) return false;
-        const rect = el.getBoundingClientRect();
-        return rect.top <= offset && rect.bottom >= offset;
-      });
-
-      if (current && current.id !== activeSection.current) {
-        activeSection.current = current.id;
-        window.history.replaceState(null, "", current.id);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
-      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-
-    if (location.pathname === "/") scrollTo(overviewRef);
-    if (location.pathname === "/clearance") scrollTo(clearanceRef);
-    if (location.pathname === "/products") scrollTo(productsRef);
-  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-900 relative">
@@ -123,7 +74,7 @@ export default function App() {
           className="relative w-full h-[70vh] flex items-center justify-center text-center text-white"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1556742393-d75f468bfcb0?auto=format&fit=crop&w=1600&q=80')",
+              "url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundAttachment: "fixed",
@@ -135,12 +86,17 @@ export default function App() {
               Massive Clearance Sale is Live!
             </h2>
             <p className="text-gray-200 text-lg mb-6">
-              Grab your favorite items before and Save big on limited stock
-              items — exclusive discounts before they’re gone. Don’t miss the
-              best deals of the season!
+              Save big on top products — limited stock, exclusive deals, and
+              huge discounts you can’t miss!
             </p>
             <a
-              href="#clearance"
+              onClick={(e) => {
+                e.preventDefault();
+                clearanceRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
               className="mt-auto w-full bg-gray-900 text-white text-md py-3 rounded-lg font-semibold tracking-tight hover:bg-black transition-all active:scale-[0.98] cursor-pointer p-4"
             >
               Shop Clearance
@@ -156,7 +112,8 @@ export default function App() {
               Inventory Overview
             </h2>
             <p className="text-gray-500 text-sm mt-1">
-              Smart pricing recommendations based on stock & demand signals.
+              Smart pricing recommendations powered by real-time demand and
+              stock insights.
             </p>
           </div>
         </section>
