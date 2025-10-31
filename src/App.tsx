@@ -33,7 +33,7 @@ export default function App() {
   useEffect(() => {
     const fetchDataFromSheet = async () => {
       setLoading(true);
-      
+
       try {
         const res = await fetch(DATA_SHEET_URL);
         const json = await res.json();
@@ -74,7 +74,7 @@ export default function App() {
           className="relative w-full h-[70vh] flex items-center justify-center text-center text-white"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1600&q=80')",
+              "url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1600&q=80')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundAttachment: "fixed",
