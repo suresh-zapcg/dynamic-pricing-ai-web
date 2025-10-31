@@ -135,18 +135,18 @@ export function ProductCard({
           </div>
         </div>
 
-        <div className="flex justify-between text-gray-600 mt-8">
+        <div className="flex justify-between text-gray-600 mt-4">
           <span className="font-medium">Range</span>
           <span className="font-semibold text-gray-900">
             ₹{product.minPrice} - ₹{product.maxPrice}
           </span>
         </div>
-        <div className="flex justify-between text-gray-600">
+        {/* <div className="flex justify-between text-gray-600">
           <span className="font-medium">Stock</span>
           <span className="font-semibold text-gray-900">
             {product.stock} units
           </span>
-        </div>
+        </div> */}
       </div>
 
       <button
